@@ -110,8 +110,8 @@ class crop (Filter):
         self.parameters.update ({parameter, new_value})
 
     def apply (self, img):
-        return img [self.parameters ["x1"] : self.parameters ["x2"],
-                    self.parameters ["y1"] : self.parameters ["y2"], :].copy ()
+        return img [self.parameters ["y1"] : self.parameters ["y2"],
+                    self.parameters ["x1"] : self.parameters ["x2"], :].copy ()
 
 class gamma_correction (Filter):
     def __init__ (self, gamma_ = 1):
@@ -476,15 +476,21 @@ class Processors:
     def get_stages (self, detector_name):
         return self.stages [detector_name]
 
-    def get_stages_picts (self, processor_name):
+    def get_stages_picts (self, processor_name, filters_list = []):
         stages_picts = []
 
         for i in range (len (self.stages [processor_name])):
-            if (i == 0):
+            if (i == 0 and ("initial" in filters_list or len (filters_list) == 0)):
                 stages_picts.append (self.stages [processor_name] [i])
                 continue
 
             filter_usr_name = list (self.processors [processor_name].keys ()) [i - 1]
+            print (filter_usr_name)
+
+            if (len (filters_list) != 0 and filter_usr_name not in filters_list):
+                print ("skip")
+                continue
+
             filter_type = self.processors [processor_name] [filter_usr_name].name
 
             #print ("filter type", filter_type)
@@ -492,9 +498,17 @@ class Processors:
             stage = self.stages [processor_name] [i]
 
             if (filter_type == "max_area_cc_bbox"):
-                prev_img = self.stages [processor_name] [0].copy ()
+                first_img = self.stages [processor_name] [0].copy ()
 
-                rect_marked = cv2.rectangle (prev_img, stage [0], stage [1], (100, 200, 10), 5)
+                for j in range (0, i):
+                    if (self.processors [processor_name] [j].name () == "crop"):
+                        params = self.processors [processor_name] [j].parameters
+                        x_shift += params ["x1"]
+                        y_shift += params ["y1"]
+
+                rect_marked = cv2.rectangle (prev_img, stage [0] + x_shift,
+                    stage [1] + y_shift, (100, 200, 10), 5)
+
                 stages_picts.append (rect_marked)
 
             elif (filter_type == "crop"):
@@ -505,7 +519,10 @@ class Processors:
                 x2 = self.processors [processor_name] [filter_usr_name].parameters ["x2"]
                 y2 = self.processors [processor_name] [filter_usr_name].parameters ["y2"]
 
-                rect_marked = cv2.rectangle (prev_img, (x1, y1), (x2, y2), (100, 200, 10), 5)
+                #rect_marked = cv2.rectangle (prev_img, (x1, y1), (x2, y2), (10, 200, 100), 5)
+
+                rect_marked = prev_img [y1:y2, x1:x2, :]
+
                 stages_picts.append (rect_marked)
 
             elif (filter_type == "find_obstacles_distances"):
