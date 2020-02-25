@@ -500,13 +500,13 @@ class Processors:
             if (filter_type == "max_area_cc_bbox"):
                 first_img = self.stages [processor_name] [0].copy ()
 
-                for j in range (0, i):
-                    if (self.processors [processor_name] [j].name () == "crop"):
-                        params = self.processors [processor_name] [j].parameters
-                        x_shift += params ["x1"]
-                        y_shift += params ["y1"]
+                #for j in range (0, i):
+                #    if (self.processors [processor_name] [j].name () == "crop"):
+                #        params = self.processors [processor_name] [j].parameters
+                #        x_shift += params ["x1"]
+                #        y_shift += params ["y1"]
 
-                rect_marked = cv2.rectangle (prev_img, stage [0] + x_shift,
+                rect_marked = cv2.rectangle (first_img, stage [0] + x_shift,
                     stage [1] + y_shift, (100, 200, 10), 5)
 
                 stages_picts.append (rect_marked)
