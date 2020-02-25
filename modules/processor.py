@@ -506,8 +506,8 @@ class Processors:
                 #        x_shift += params ["x1"]
                 #        y_shift += params ["y1"]
 
-                rect_marked = cv2.rectangle (first_img, stage [0] + x_shift,
-                    stage [1] + y_shift, (100, 200, 10), 5)
+                rect_marked = cv2.rectangle (first_img, stage [0],
+                    stage [1], (100, 200, 10), 5)
 
                 stages_picts.append (rect_marked)
 
