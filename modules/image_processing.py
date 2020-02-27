@@ -90,7 +90,7 @@ def to_three (img):
 #    
 #    return (left, top), (left + width, top + height)
 
-def find_max_bounding_box (mask):
+def find_max_bounding_box (mask, bbox_num):
     result = np.array (mask)
     output = cv2.connectedComponentsWithStats (mask, 8, cv2.CV_32S)
     labels_num = output      [0]
@@ -106,19 +106,36 @@ def find_max_bounding_box (mask):
     if (sz == 1):
         success = False
 
-    for label_num in range (1, sz):
-        if (stats [label_num, cv2.CC_STAT_AREA] > max_area):
-            max_area = stats [label_num, cv2.CC_STAT_AREA]
-            max_label = label_num
-    
-    top    = stats [max_label, cv2.CC_STAT_TOP]
-    left   = stats [max_label, cv2.CC_STAT_LEFT]
-    width  = stats [max_label, cv2.CC_STAT_WIDTH]
-    height = stats [max_label, cv2.CC_STAT_HEIGHT]
-    
-    #print ("max area", max_area)
+    sorted_components = stats [np.argsort (stats[:, cv2.CC_STAT_AREA])]
 
-    return ((left, top), (left + width, top + height)), success
+    print (sorted_components)
+
+    sorted_components = sorted_components [: -1]
+
+    print (sorted_components)
+
+    sorted_components = sorted_components [ - min (bbox_num, len (sorted_components)) :]
+
+#[-min (bbox_num, len (sorted_components)) + 1 : -1]
+
+    print (sorted_components)
+
+    #for label_num in range (1, sz):
+    #    if (stats [label_num, cv2.CC_STAT_AREA] > max_area):
+    #        max_area = stats [label_num, cv2.CC_STAT_AREA]
+    #        max_label = label_num
+    
+    result = []
+
+    for i in range (len (sorted_components)):
+        top    = sorted_components [i, cv2.CC_STAT_TOP]
+        left   = sorted_components [i, cv2.CC_STAT_LEFT]
+        width  = sorted_components [i, cv2.CC_STAT_WIDTH]
+        height = sorted_components [i, cv2.CC_STAT_HEIGHT]
+    
+        result.append (((left, top), (left + width, top + height)))
+
+    return result, success
 
 def leave_max_connected_component (mask):
     result = np.zeros_like (mask)

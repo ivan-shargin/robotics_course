@@ -191,11 +191,12 @@ class inrange (Filter):
 
 #find bbox of the connected component with maximal area
 class max_area_cc_bbox (Filter):
-    def __init__ (self):
+    def __init__ (self, bbox_num_ = 1):
         Filter.__init__ (self, "max_area_cc_bbox")
+        self.bbox_num = bbox_num_
 
     def apply (self, img):
-        result, success_curr = image_processing.find_max_bounding_box (img)
+        result, success_curr = image_processing.find_max_bounding_box (img, self.bbox_num)
 
         self.success.append (success_curr)
 
@@ -506,8 +507,10 @@ class Processors:
                 #        x_shift += params ["x1"]
                 #        y_shift += params ["y1"]
 
-                rect_marked = cv2.rectangle (first_img, stage [0],
-                    stage [1], (100, 200, 10), 5)
+                rect_marked = first_img.copy ()
+
+                for s in stage:
+                    rect_marked = cv2.rectangle (rect_marked, s [0], s [1], (100, 200, 10), 5)
 
                 stages_picts.append (rect_marked)
 
