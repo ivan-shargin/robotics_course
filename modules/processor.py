@@ -486,7 +486,10 @@ class Processors:
                 continue
 
             filter_usr_name = list (self.processors [processor_name].keys ()) [i - 1]
+<<<<<<< HEAD
+=======
             #print (filter_usr_name)
+>>>>>>> 8ec31350be7502f4a32c791bd3b514ef87ed8d02
 
             if (len (filters_list) != 0 and filter_usr_name not in filters_list):
                 print ("skip")
