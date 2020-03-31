@@ -103,22 +103,12 @@ def find_max_bounding_box (mask, bbox_num):
     
     success = True
 
-    if (sz == 1):
-        success = False
+    #if (sz == 1):
+    #    success = False
 
     sorted_components = stats [np.argsort (stats[:, cv2.CC_STAT_AREA])]
-
-    print (sorted_components)
-
     sorted_components = sorted_components [: -1]
-
-    print (sorted_components)
-
     sorted_components = sorted_components [ - min (bbox_num, len (sorted_components)) :]
-
-#[-min (bbox_num, len (sorted_components)) + 1 : -1]
-
-    print (sorted_components)
 
     #for label_num in range (1, sz):
     #    if (stats [label_num, cv2.CC_STAT_AREA] > max_area):
@@ -134,6 +124,8 @@ def find_max_bounding_box (mask, bbox_num):
         height = sorted_components [i, cv2.CC_STAT_HEIGHT]
     
         result.append (((left, top), (left + width, top + height)))
+
+    #print ("result", result)
 
     return result, success
 

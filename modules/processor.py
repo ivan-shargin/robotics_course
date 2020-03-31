@@ -84,11 +84,25 @@ class morphology (Filter):
         kernel = np.ones ((self.ker_sz, self.ker_sz), np.uint8)
         return cv2.morphologyEx (img, self.operations [self.operation], kernel)
 
-class GaussianBlur (Filter):
+class gaussian_blur (Filter):
     def __init__ (self, ker_sz_ = 3):
         Filter.__init__ (self, "Gaussian Blur")
 
         self.ker_sz = ker_sz_
+        
+    def apply (self, img):
+        return cv2.GaussianBlur (img, (self.ker_sz, self.ker_sz), 0)
+
+class find_object (Filter):
+    def __init__ (self, img_):
+        Filter.__init__ (self, "find object")
+
+        self.img = img_
+
+        self.compute_keypoints ()
+
+    def compute_keypoints (self):
+        return 5
         
     def apply (self, img):
         return cv2.GaussianBlur (img, (ker_sz, kre_sz), 0)
@@ -200,7 +214,7 @@ class max_area_cc_bbox (Filter):
 
         self.success.append (success_curr)
 
-        #print ("max area cc bbox", result)
+        #print ("max area cc bbox", result, success_curr)
 
         return result
 
@@ -366,7 +380,36 @@ class calc_distribution(Filter):
         third_channel = cv2.calcHist([img[:,:,2]],[0],None,[256],[0,256])
         return (first_channel, second_channel, third_channel)
 
+class background_subtraction(Filter):
+    def __init__(self, frame = None, background_frame_skip_ = 70):
+        Filter.__init__(self, "background_subtraction")
+        self.background_frame_set = background_frame_skip_
+        
+        if (frame is not None):
+            self.update_background_frame(frame)
 
+    def update_background_frame(self, frame):
+        self.background_frame = frame
+        #print (self.background_frame_set)
+        self.background_frame_set -= 1
+
+    def get_background_frame (self):
+        return self.background_frame
+
+    def apply(self, img):
+        if (self.background_frame_set != 0):
+            self.update_background_frame (img)
+            return img
+
+        #print ("a")
+
+        subtract = np.absolute(self.background_frame - img)
+
+        #cv2.imshow ("mlem", subtract)
+
+        #single_channel = cv2.cvtColor (subtract, cv2.COLOR_RGB2GRAY)
+
+        return subtract
 
 #------------------------------------------------------
 
@@ -480,23 +523,29 @@ class Processors:
     def get_stages_picts (self, processor_name, filters_list = []):
         stages_picts = []
 
+        #print ("stages: ", self.stages [processor_name])
+
         for i in range (len (self.stages [processor_name])):
             if (i == 0 and ("initial" in filters_list or len (filters_list) == 0)):
                 stages_picts.append (self.stages [processor_name] [i])
                 continue
 
             filter_usr_name = list (self.processors [processor_name].keys ()) [i - 1]
-            #print (filter_usr_name)
+            #print ("usr name", filter_usr_name)
 
             if (len (filters_list) != 0 and filter_usr_name not in filters_list):
-                print ("skip")
+                #print ("skip", filter_usr_name)
                 continue
 
-            filter_type = self.processors [processor_name] [filter_usr_name].name
+            filter = self.processors [processor_name] [filter_usr_name]
+            filter_type = filter.name
 
             #print ("filter type", filter_type)
 
             stage = self.stages [processor_name] [i]
+
+            #print ("filter_usr_name", filter_usr_name)
+            #print ("stage", stage)
 
             if (filter_type == "max_area_cc_bbox"):
                 first_img = self.stages [processor_name] [0].copy ()
@@ -509,7 +558,11 @@ class Processors:
 
                 rect_marked = first_img.copy ()
 
+                stage = self.stages [processor_name] [-1]
+
                 for s in stage:
+                    #print (s)
+                    #print (s [0])
                     rect_marked = cv2.rectangle (rect_marked, s [0], s [1], (100, 200, 10), 5)
 
                 stages_picts.append (rect_marked)
@@ -568,6 +621,9 @@ class Processors:
                 plt.close('all')
                 stages_picts.append(X)
 
+            #elif (filter_type == "background_subtraction"):
+            #    stages_picts.append (filter.get_background_frame ())
+
             else:
                 stages_picts.append (stage)
 
@@ -583,6 +639,9 @@ class Processors:
             previous_step = self.stages [processor_name] [-1]
 
             curr_state = filter.apply (previous_step)
+
+            #print ("name, filter, curr_state", name, filter, curr_state)
+
             self.stages [processor_name].append (curr_state)
 
             if (len (filter.success) != 0 and filter.success [-1] == False):

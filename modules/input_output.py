@@ -190,7 +190,7 @@ class Source:
 #generalize to the desired a by b cells grid (?)
 #generalize to the desired acpect ratio (?)
 
-def form_grid (images_, window_x_sz = -1, one_img_x_sz = -1):
+def form_grid (images_, window_x_sz = -1, one_img_x_sz = -1, names = []):
     images = []
     forms = {
         1 : [1, 1, 0], #(number of images x, number of images y, number of empty images)
@@ -212,6 +212,7 @@ def form_grid (images_, window_x_sz = -1, one_img_x_sz = -1):
         print("Can process only 12 images")
         return 0
 
+    #print ("images0 shape", images_)
     shape = images_[0].shape
     if one_img_x_sz != -1:
         rescale_factor = one_img_x_sz/shape[1]
@@ -228,7 +229,7 @@ def form_grid (images_, window_x_sz = -1, one_img_x_sz = -1):
     #print ("2", images_ [2].shape)
     #print ("3", images_ [3].shape)
 
-    for img in images_:
+    for img, i in zip (images_, range (len (images_))):
         #print ("before resize", img.shape)
 
         img = cv2.resize(img, (shape[1], shape[0]))
@@ -236,6 +237,11 @@ def form_grid (images_, window_x_sz = -1, one_img_x_sz = -1):
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         if img.shape[2] == 4: #rgba
             img = img[:, :, :3]
+
+        if (len (names) != 0):
+            cv2.putText (img, names [i], (30, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (20, 250, 231), 1, cv2.LINE_AA)
+
         images.append(img)
 
     for j in range(form[2]):
@@ -246,8 +252,22 @@ def form_grid (images_, window_x_sz = -1, one_img_x_sz = -1):
         rows.append(np.concatenate(images[i*form[0]:(i+1)*form[0]], axis = 1))
     return np.concatenate(rows) 
 
+class Writer:
+    def __init__ (self, name_, xsz_, ysz_, fps_ = 20):
+        self.name = name_
+        self.xsz = xsz_
+        self.ysz = ysz_
+        self.fps = fps_
 
+        #self.fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+        #self.out    = cv2.VideoWriter(self.name, self.fourcc, self.fps, (self.xsz, self.ysz))
+        self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        self.out = cv2.VideoWriter(self.name,self.fourcc, self.fps, (self.xsz, self.ysz))
 
+    def write (self, frame):
+        self.out.write (frame)
 
-
+    def __del__(self):
+        #print ("release")
+        self.out.release()
 
