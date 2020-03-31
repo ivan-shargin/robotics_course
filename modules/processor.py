@@ -531,7 +531,7 @@ class Processors:
                 continue
 
             filter_usr_name = list (self.processors [processor_name].keys ()) [i - 1]
-            #print ("usr name", filter_usr_name)
+
 
             if (len (filters_list) != 0 and filter_usr_name not in filters_list):
                 #print ("skip", filter_usr_name)
