@@ -58,8 +58,9 @@ class Source:
                 self.type = "photo"
 
             elif (self.path.endswith (".webm") or
-                self.path.endswith (".mp4") or
-                self.path.endswith (".avi")):
+                  self.path.endswith (".mp4") or
+                  self.path.endswith (".MTS") or
+                  self.path.endswith (".avi")):
                 self.type = "video"
 
             elif (self.path.endswith ("/")):
@@ -88,6 +89,8 @@ class Source:
 
         else:
             self.type = type_
+
+        print (self.type)
 
         if (instant_init == True):
             self.init_source ()
@@ -176,7 +179,7 @@ class Source:
     def get_frame_camera (self):
         reading_success, frame = self.camera.read ()
 
-        return frame
+        return reading_success, frame
 
     def get_frame_photo (self):
         return self.img.copy ()
@@ -253,7 +256,7 @@ def form_grid (images_, window_x_sz = -1, one_img_x_sz = -1, names = []):
     return np.concatenate(rows) 
 
 class Writer:
-    def __init__ (self, name_, xsz_, ysz_, fps_ = 20):
+    def __init__ (self, name_, xsz_, ysz_, fps_ = 30):
         self.name = name_
         self.xsz = xsz_
         self.ysz = ysz_
