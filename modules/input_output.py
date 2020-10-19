@@ -60,6 +60,8 @@ class Source:
             elif (self.path.endswith (".webm") or
                   self.path.endswith (".mp4") or
                   self.path.endswith (".MTS") or
+                  self.path.endswith (".mkv") or
+                  self.path.endswith (".mov") or
                   self.path.endswith (".avi")):
                 self.type = "video"
 
@@ -149,7 +151,7 @@ class Source:
         return self.sources [self.type] [1] ()
 
     def get_frame_photo (self):
-        return self.img.copy ()
+        return True, self.img.copy ()
         
     def get_frame_photo_series (self):
         filename = str (self.files [self.file_num])
