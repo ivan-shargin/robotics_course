@@ -1,0 +1,23 @@
+{
+    "configuration" : "basket detector",
+
+    "modules":
+        [
+        {
+        "name" : "camera",
+	"data_path" : "../data/perimeter.mov"
+        },
+
+
+	{
+        "name" : "image processor",
+	"config_path" : "../configs/basketball.json",
+        "requires": ["camera"]
+        },
+
+
+	{
+        "name" : "keyboard"
+	}
+        ]
+}
