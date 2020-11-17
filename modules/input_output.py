@@ -49,7 +49,11 @@ class Source:
     sample_image_incoherency_fixed = False
 
     def __init__ (self, path_, type_ = "", instant_init = True):
-        self.path = path_
+        if (type(path_) != type("a")):
+            self.path = path_ ["data_path"]
+
+        else:
+            self.path = path_
         
         if (type_ == ""):
             if (self.path.endswith (".jpg") or
@@ -146,7 +150,7 @@ class Source:
             self.sample_image_incoherency_fixed == False):
             self.sample_image_incoherency_fixed = True
             
-            return self.sample_image
+            return True, self.sample_image
 
         return self.sources [self.type] [1] ()
 
@@ -273,6 +277,7 @@ class Writer:
         self.out.write (frame)
 
     def __del__(self):
-        #print ("release")
-        self.out.release()
+        self.release()
 
+    def release (self):
+        self.out.release ()

@@ -15,35 +15,23 @@ import matplotlib.pyplot as plt
 plt.switch_backend('Agg')
 
 #TODO: Implement simultaneous stages displaying in single window
-#TODO: Document the logics behind the project architecture, filters creation
-#TODO: Fix issues arised because of the folder reorganization
 #TODO: In HSV H represents circular matter. There should be an option to
 #      set [240 -- 5] range, for instance
-#Integrate ilastic - tool for segmentation in the detection process
-#Filter returning lowest point of the connected component
-
-#TODO/REFACTOR
 #Move parameters parsing into the filters constructors from Detector constructor
 #Refactor parameters extraction in find_obstacles_distances creation, automate
 #      types number obtainment
 #Move code to standard Python style
 #Move filters to a separate file
 #Move image processing (if any) from detectors.py to image_processing.py
-#Adopt tests to new Detector usage (with multiple objects)
 #Refactor Detector, particularly multi-object part
 #Move particular cases of get_stages_steps into the filters
 #    for the generalization
-
-#TODO/FUTURE
 #Make up a way to plug filters in another filters.
 #             Closest obstacle finder uses inrange, morphology, connected components filtering,
 #             iterating
 #Filter can store its parameters in a dictionary
-#Implement IO library with picture, video, camera, ROS input handling
-#Online vizualizing tool for filters
-#Metaconfig with a list of configs (?)
 #Tuning of Inrange (ranges.py) to .json
-#Different verbosity levels logging system
+#--------------------------------------------------
 
 #Filter is an img-to-img transformation; generally from any shape to any shape
 #Previous comment was written in the very beginning of the development
@@ -199,11 +187,18 @@ class inrange (Filter):
         self.set_ths (low_th_, high_th_)
         
     def set_ths (self, low_th_, high_th_):
-        self.low_th  = low_th_
-        self.high_th = high_th_
+        self.low_th  = list (low_th_)
+        self.high_th = list (high_th_)
+
+    def set_th (self, new_val, low_high, channel):
+        if (low_high == "low"):
+            self.low_th[channel] = new_val
+
+        elif (low_high == "high"):
+            self.high_th [channel] = new_val
 
     def apply (self, img):
-        return cv2.inRange (img, self.low_th, self.high_th)
+        return cv2.inRange (img, tuple (self.low_th), tuple (self.high_th))
 
 #find bbox of the connected component with maximal area
 class max_area_cc_bbox (Filter):
@@ -421,15 +416,10 @@ class contour_approximation(Filter):
         contours, hierarchy = cv2.findContours (img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         cnt = contours [0]
 
-        #epsilon = 0.1 * cv2.arcLength (cnt, True)
-        #approx = cv2.approxPolyDP (cnt, epsilon, True)
-
         approx = cv2.convexHull (cnt)
 
         epsilon = 0.05 * cv2.arcLength (approx, True)
         approx = cv2.approxPolyDP (approx, epsilon, True)
-
-        #print ("appr", approx)
 
         return approx
 
@@ -629,10 +619,12 @@ class Processors:
 
                     new_filter.cc_filter = new_cc_filter
 
-                self.add_filter (new_filter, detector_name, filter_name)
-        
+                #self.add_filter (new_filter, detector_name, filter_name)
+                self.add_filter (new_filter, processor_name, filter_name)
+
     def add_processor (self, processor_name):
         self.processors.update ({processor_name : collections.OrderedDict ()})
+        #print(processor_name, self.stages.keys())
 
     def add_filter (self, new_filter, processor_name, filter_name):
         self.processors [processor_name] [filter_name] = new_filter
@@ -644,6 +636,7 @@ class Processors:
         stages_picts = []
 
         #print ("stages: ", self.stages [processor_name])
+        ##print (processor_name, self.stages.keys())
 
         for i in range (len (self.stages [processor_name])):
             if (i == 0 and ("initial" in filters_list or len (filters_list) == 0)):
